@@ -1,3 +1,78 @@
+import sqlite3
+
+class UnknownID(Exception):
+    pass
+
+# Prompts user to enter ID. Exits program when -1 is entered.
+def ask_user():
+    while True:
+        id = input("Enter an ID (Enter -1 to exit): ")
+        if id.isdigit() is True:
+            id_check(int(id))
+        else:
+            if id.find('-1') != -1:
+                break
+            else:
+                print("Invalid entry, please try again")
+                print("")
+
+# Checks if given ID is in the table. Raises error if ID is not found.
+def id_check(id):
+    id_cell = (id,)
+    connection = sqlite3.connect("pets.db")
+    cursor = connection.cursor()
+    person_id_list = cursor.execute(f"""Select id FROM person""").fetchall()
+
+    if id_cell not in person_id_list:
+        raise UnknownID("ID not found")
+    else:
+        find_person_pet(id)
+
+# Finds and prints out data on pet based on given ID.
+def find_pet_data(id):
+    connection = sqlite3.connect("pets.db")
+    cursor = connection.cursor()
+    pet_data = cursor.execute(f"""Select *
+                    FROM pet
+                    WHERE id = {id}
+            """).fetchall()
+    name = pet_data[0][1]
+    breed = pet_data[0][2]
+    age = pet_data[0][3]
+    dead = pet_data[0][4]
+    if dead == 0:
+        pet = f"owns {name}, a(n) {breed} that is {age} year(s) old."
+    else:
+        pet = f"owned {name}, a(n) {breed} that was {age} year(s) old."
+
+    return pet
+
+# Finds and prints out data on person and their pets, based on given ID.
+def find_person_pet(id):
+    connection = sqlite3.connect("pets.db")
+    cursor = connection.cursor()
+    person_data = cursor.execute("""Select *
+                FROM person
+                ORDER BY id
+        """).fetchall()
+    person_pet_data = cursor.execute("""Select *
+                FROM person_pet
+                ORDER BY person_id
+        """).fetchall()
+
+    for person in person_data:
+        while id == person[0]:
+            first_name = person[1]
+            last_name = person[2]
+            age = person[3]
+            print(f"{first_name} {last_name} is {age} years old.")
+            for person_pet in person_pet_data:
+                while id == person_pet[0]:
+                    msg = find_pet_data(person_pet[1])
+                    print(f"{first_name} {last_name} {msg}")
+                    break
+            print("")
+            break
 
 if __name__ == "__main__":
-    pass
+   ask_user()
