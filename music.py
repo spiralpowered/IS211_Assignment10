@@ -65,3 +65,5 @@ if __name__ == "__main__":
             ON artist.artist_id = song.artist_id
             ORDER BY artist_name, track_id
     """)
+
+    connection.commit()
